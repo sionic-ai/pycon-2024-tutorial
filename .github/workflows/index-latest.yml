@@ -1,0 +1,34 @@
+name: Index Qdrant source
+
+# Trigger manually
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "55 0 * * *" # every day at 00:55 UTC
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install minimal stable
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Add rust analyzer
+      run: rustup component add rust-analyzer
+    - name: Run indexing
+      run: QDRANT_URL=${{ secrets.QDRANT_URL }} QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }} bash -x tools/download_and_index.sh
